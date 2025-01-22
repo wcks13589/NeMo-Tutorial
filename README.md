@@ -53,7 +53,7 @@ docker run --gpus all -it --rm -v $HOME:$HOME --shm-size=8g \
 在操作流程之前，請先執行以下命令以下載本專案的程式庫。
 
 ```bash
-git clone https://github.com/your-repository/NeMo-Tutorial.git
+git clone https://github.com/wcks13589/NeMo-Tutorial.git
 cd NeMo-Tutorial
 ```
 
@@ -115,13 +115,13 @@ dataset.to_json('./data/custom_dataset/json/wikinews-zhtw.jsonl', force_ascii=Fa
 mkdir -p data/custom_dataset/preprocessed
 
 python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
---input=data/custom_dataset/json/wikinews-zhtw.jsonl \
---json-keys=text \
---dataset-impl mmap \
---tokenizer-library=huggingface \
---tokenizer-type meta-llama/Llama-3.1-8B-Instruct \
---output-prefix=data/custom_dataset/preprocessed/wikinews \
---append-eod
+    --input=data/custom_dataset/json/wikinews-zhtw.jsonl \
+    --json-keys=text \
+    --dataset-impl mmap \
+    --tokenizer-library=huggingface \
+    --tokenizer-type meta-llama/Llama-3.1-8B-Instruct \
+    --output-prefix=data/custom_dataset/preprocessed/wikinews \
+    --append-eod
 ```
 
 #### 預訓練過程
@@ -176,4 +176,4 @@ bash convert_ckpt/convert_from_nemo_to_hf.sh
 
 ## 📚 參考資料 📘
 
-- [NVIDIA NeMo 官方文檔](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) 📄
+- [NVIDIA NeMo 官方文件](https://docs.nvidia.com/nemo-framework/user-guide/latest/overview.html) 📄
