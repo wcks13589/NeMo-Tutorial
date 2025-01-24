@@ -16,7 +16,7 @@ if __name__ == "__main__":
         tensor_parallelism_size=1,
         pipeline_parallelism_size=1,
         dtype="bfloat16",
-        max_input_len=256,
-        max_output_len=256,
-        max_batch_size=64,
+        max_input_len=8192,
+        max_output_len=8192,
+        max_batch_size=16,
     )
