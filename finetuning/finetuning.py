@@ -1,3 +1,6 @@
+import os
+import glob
+
 import pytorch_lightning as pl
 
 import nemo_run as run
@@ -16,6 +19,15 @@ PROMPT_TEMPLATE = f"""\
 {{output}}\
 """
 
+NUM_GPUS = 8
+
+def find_latest_checkpoint(directory="nemo-experiments/llama31_pretraining/checkpoints"):
+    checkpoint_files = glob.glob(os.path.join(directory, "**", "*last*"), recursive=True)
+    if not checkpoint_files:
+        return None
+    latest_checkpoint = max(checkpoint_files, key=os.path.getmtime)
+    return latest_checkpoint
+
 def configure_dataset(
     gbs: int = 8,
     mbs: int = 1,
@@ -28,70 +40,59 @@ def configure_dataset(
         global_batch_size=gbs,
         micro_batch_size=mbs,
         tokenizer=run.Config(AutoTokenizer, pretrained_model_name="meta-llama/Llama-3.1-8B-Instruct"),
-        seq_length=8192,
-        dataset_kwargs={
-            "prompt_template": PROMPT_TEMPLATE
-        }
+        seq_length=seq_length,
+        dataset_kwargs={"prompt_template": PROMPT_TEMPLATE}
     )
 
-def configure_recipe(nodes: int = 1, gpus_per_node: int = 4):
-
+def configure_recipe(nodes: int = 1, gpus_per_node: int = 8):
     recipe = llm.llama31_8b.pretrain_recipe(
-        dir="nemo-experiments", # Path to store checkpoints
+        dir="nemo-experiments",
         name="llama31_finetuning",
         num_nodes=nodes,
         num_gpus_per_node=gpus_per_node,
     )
-
     recipe.data = configure_dataset()
-    recipe.trainer.max_steps = 10
-    recipe.trainer.num_sanity_val_steps = 0
-
-    # Need to set this to 1 since the default is 2
-    recipe.trainer.strategy.context_parallel_size = 1
+    recipe.trainer.devices = gpus_per_node
+    
+    recipe.trainer.max_steps = 30
     recipe.trainer.val_check_interval = 10
-
+    recipe.trainer.num_sanity_val_steps = 0
+    
+    recipe.trainer.strategy.tensor_model_parallel_size = 4
+    recipe.trainer.strategy.pipeline_model_parallel_size = 1
+    recipe.trainer.strategy.context_parallel_size = 1
+    
+    recipe.log.ckpt.save_optim_on_train_end = True
+    
     return recipe
 
-def local_executor_torchrun(nodes: int = 1, devices: int = 8) -> run.LocalExecutor:
-    # Env vars for jobs are configured here
+def local_executor_torchrun(devices: int = 8) -> run.LocalExecutor:
     env_vars = {
         "TORCH_NCCL_AVOID_RECORD_STREAMS": "1",
         "NCCL_NVLS_ENABLE": "0",
         "NVTE_DP_AMAX_REDUCE_INTERVAL": "0",
         "NVTE_ASYNC_AMAX_REDUCTION": "1",
+        "HF_TOKEN_PATH": "/tokens/huggingface",
+        "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(devices)))
     }
-
     executor = run.LocalExecutor(ntasks_per_node=devices, launcher="torchrun", env_vars=env_vars)
-
     return executor
 
-def run_pretraining():
-    recipe = configure_recipe()
+def run_finetuning(num_gpus=8):
+    recipe = configure_recipe(gpus_per_node=NUM_GPUS)
+    executor = local_executor_torchrun(devices=NUM_GPUS)
 
-    executor = local_executor_torchrun(nodes=recipe.trainer.num_nodes, devices=recipe.trainer.devices)
+    latest_checkpoint = find_latest_checkpoint()
+    if latest_checkpoint:
+        recipe.resume = run.Config(
+            nl.AutoResume,
+            restore_config=run.Config(nl.RestoreConfig, path=latest_checkpoint),
+            resume_if_exists=True
+        )
 
-    # Change executor params
-    executor.ntasks_per_node = 4
-    executor.env_vars["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4"
-    executor.env_vars["HF_TOKEN_PATH"] = "/tokens/huggingface"
-
-    # Change recipe params
-    # We also need to set TP to 1, since we had used 2 for 2 GPUs.
-    recipe.trainer.strategy.tensor_model_parallel_size = 4
-    # Lastly, we need to set devices to 1 in the trainer.
-    recipe.trainer.devices = 4
-    recipe.log.ckpt.save_optim_on_train_end=True
-    recipe.resume = run.Config(
-        nl.AutoResume,
-        restore_config=run.Config(nl.RestoreConfig, path="nemo-experiments/llama31_pretraining/checkpoints/model_name=0--val_loss=0.44-step=9-consumed_samples=80.0-last"),
-        resume_if_exists=True
-    )
-
-    with run.Experiment("llama31-8b-funtuning") as exp:
+    with run.Experiment("llama31-8b-finetuning") as exp:
         exp.add(recipe, executor=executor, name="finetuning")
-        exp.run(sequential=True, tail_logs=True) # This will run the tasks sequentially and stream the logs
+        exp.run(sequential=True, tail_logs=True)
 
-# This condition is necessary for the script to be compatible with Python's multiprocessing module.
 if __name__ == "__main__":
-    run_pretraining()
+    run_finetuning()

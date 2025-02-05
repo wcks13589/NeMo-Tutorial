@@ -71,7 +71,7 @@ cd NeMo-Tutorial
 執行以下命令以完成登入：
 
 ```bash
-huggingface-cli login <HF_TOKEN>
+huggingface-cli login --token <HF_TOKEN>
 ```
 
 #### 下載模型
@@ -91,7 +91,12 @@ python convert_ckpt/convert_from_hf_to_nemo.py
 
 Option 2: 透過Cli
 ```bash
-bash convert_ckpt/convert_from_hf_to_nemo.sh
+MODEL=llama3_8b
+HF_MODEL_ID=Llama-3.1-8B-Instruct
+OUTPUT_PATH=nemo_ckpt/Llama-3.1-8B-Instruct
+OVERWRITE_EXISTING=false
+
+nemo llm import -y model=${MODEL} source=hf://${HF_MODEL_ID} output_path=${OUTPUT_PATH} overwrite=${OVERWRITE_EXISTING}
 ```
 
 ### 2️⃣ 持續預訓練（Continual Pretraining） 📖
@@ -167,7 +172,10 @@ python convert_ckpt/convert_from_nemo_to_hf.py
 
 Option 2: 透過Cli
 ```bash
-bash convert_ckpt/convert_from_nemo_to_hf.sh
+NEMO_MODEL=nemo-experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
+OUTPUT_PATH=hf_ckpt
+
+nemo llm export -y path=${NEMO_MODEL} output_path=${OUTPUT_PATH} target=hf
 ```
 
 具體參數使用指南可於腳本的 README 文件中找到 📖。
