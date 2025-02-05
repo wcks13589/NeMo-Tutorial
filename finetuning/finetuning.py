@@ -8,18 +8,23 @@ from nemo.collections import llm
 from nemo import lightning as nl
 from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
 
-SYSTEM_PROMPTE = "You are a knowledgeable assistant trained to provide accurate and helpful information. Please respond to the user's queries promptly and politely."
+NUM_GPUS = 8
+TOKENIZER = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL = None
+
+SYSTEM_PROMPT = (
+    "You are a knowledgeable assistant trained to provide accurate and helpful information. "
+    "Please respond to the user's queries promptly and politely."
+)
 
 PROMPT_TEMPLATE = f"""\
 <|begin_of_text|><|start_header_id|>system<|end_header_id|>
-{SYSTEM_PROMPTE}<|eot_id|>
+{SYSTEM_PROMPT}<|eot_id|>
 <|start_header_id|>user<|end_header_id|>
 {{input}}<|eot_id|>
 <|start_header_id|>assistant<|end_header_id|>
 {{output}}\
 """
-
-NUM_GPUS = 8
 
 def find_latest_checkpoint(directory="nemo-experiments/llama31_pretraining/checkpoints"):
     checkpoint_files = glob.glob(os.path.join(directory, "**", "*last*"), recursive=True)
@@ -39,7 +44,7 @@ def configure_dataset(
         dataset_root="data/alpaca",
         global_batch_size=gbs,
         micro_batch_size=mbs,
-        tokenizer=run.Config(AutoTokenizer, pretrained_model_name="meta-llama/Llama-3.1-8B-Instruct"),
+        tokenizer=run.Config(AutoTokenizer, pretrained_model_name=TOKENIZER),
         seq_length=seq_length,
         dataset_kwargs={"prompt_template": PROMPT_TEMPLATE}
     )
@@ -82,13 +87,16 @@ def run_finetuning(num_gpus=8):
     recipe = configure_recipe(gpus_per_node=NUM_GPUS)
     executor = local_executor_torchrun(devices=NUM_GPUS)
 
-    latest_checkpoint = find_latest_checkpoint()
-    if latest_checkpoint:
-        recipe.resume = run.Config(
-            nl.AutoResume,
-            restore_config=run.Config(nl.RestoreConfig, path=latest_checkpoint),
-            resume_if_exists=True
-        )
+    if MODEL:
+        checkpoint = MODEL
+    else
+        checkpoint = find_latest_checkpoint()
+        
+    recipe.resume = run.Config(
+        nl.AutoResume,
+        restore_config=run.Config(nl.RestoreConfig, path=checkpoint),
+        resume_if_exists=True
+    )
 
     with run.Experiment("llama31-8b-finetuning") as exp:
         exp.add(recipe, executor=executor, name="finetuning")
