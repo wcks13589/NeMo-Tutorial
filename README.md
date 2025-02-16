@@ -86,7 +86,12 @@ huggingface-cli download meta-llama/Llama-3.1-8B-Instruct --local-dir Llama-3.1-
 
 Option 1: 透過Python
 ```bash
-python convert_ckpt/convert_from_hf_to_nemo.py
+HF_MODEL_ID=Llama-3.1-8B-Instruct
+OUTPUT_PATH=nemo_ckpt/Llama-3.1-8B-Instruct
+
+python convert_ckpt/convert_from_hf_to_nemo.py \
+  --source ${HF_MODEL_ID} \
+  --output_path ${OUTPUT_PATH}
 ```
 
 Option 2: 透過Cli
@@ -167,7 +172,12 @@ python finetuning/finetuning.py
 
 Option 1: 透過Python
 ```bash
-python convert_ckpt/convert_from_nemo_to_hf.py
+NEMO_MODEL=nemo-experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
+OUTPUT_PATH=hf_ckpt
+
+python convert_ckpt/convert_from_nemo_to_hf.py \
+  --source ${NEMO_MODEL} \
+  --output_path ${OUTPUT_PATH}
 ```
 
 Option 2: 透過Cli

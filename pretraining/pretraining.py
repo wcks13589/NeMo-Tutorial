@@ -63,6 +63,7 @@ def local_executor_torchrun(devices: int = 8) -> run.LocalExecutor:
         "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(devices)))
     }
     executor = run.LocalExecutor(ntasks_per_node=devices, launcher="torchrun", env_vars=env_vars)
+    
     return executor
 
 def run_pretraining():

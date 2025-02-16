@@ -1,12 +1,9 @@
 from pathlib import Path
+from argparse import ArgumentParser
+
 from nemo.collections import llm
 
-# Constants for configuration
-HF_MODEL_ID = "Llama-3.1-8B-Instruct"
-OUTPUT_PATH = "nemo_ckpt/Llama-3.1-8B-Instruct"
-OVERWRITE_EXISTING = False
-
-def import_checkpoint():
+def import_checkpoint(args):
     """
     Imports a checkpoint from Hugging Face to NeMo format.
     """
@@ -15,20 +12,41 @@ def import_checkpoint():
     model = llm.LlamaModel(config=cfg)
 
     # Step 2: Log the process
-    print(f"Initializing model with HF model ID: {HF_MODEL_ID}")
-    print(f"Output will be saved to: {OUTPUT_PATH}")
+    print(f"Initializing model with HF model ID: {args.source}")
+    print(f"Output will be saved to: {args.output_path}")
 
     # Step 3: Import the checkpoint
     try:
         llm.import_ckpt(
             model=model,
-            source=f"hf://{HF_MODEL_ID}",
-            output_path=Path(OUTPUT_PATH),
-            overwrite=OVERWRITE_EXISTING,
+            source=f"hf://{args.source}",
+            output_path=Path(args.output_path),
+            overwrite=args.overwrite,
         )
     except Exception as e:
         print(f"Error during checkpoint conversion: {e}")
         raise
 
 if __name__ == "__main__":
-    import_checkpoint()
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--source",
+        type=str,
+        default=None,
+        required=True,
+        help="Path to Huggingface checkpoints",
+    )
+    parser.add_argument(
+        "--output_path",
+        type=str,
+        default=None,
+        required=True,
+        help="Path to output folder.")
+    parser.add_argument(
+        "--overwrite",
+        type=bool,
+        default=False,
+        help="If set to True, existing files at the output path will be overwritten.")
+    args = parser.parse_args()
+
+    import_checkpoint(args)

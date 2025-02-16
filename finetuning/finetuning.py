@@ -31,6 +31,7 @@ def find_latest_checkpoint(directory="nemo-experiments/llama31_pretraining/check
     if not checkpoint_files:
         return None
     latest_checkpoint = max(checkpoint_files, key=os.path.getmtime)
+    
     return latest_checkpoint
 
 def configure_dataset(
@@ -81,6 +82,7 @@ def local_executor_torchrun(devices: int = 8) -> run.LocalExecutor:
         "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(devices)))
     }
     executor = run.LocalExecutor(ntasks_per_node=devices, launcher="torchrun", env_vars=env_vars)
+    
     return executor
 
 def run_finetuning(num_gpus=8):
