@@ -1,3 +1,5 @@
+import os
+from typing import Optional
 import pytorch_lightning as pl
 
 import nemo_run as run
@@ -5,9 +7,14 @@ from nemo.collections import llm
 from nemo import lightning as nl
 from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
 
+from nemo_run.core.tunnel.client import LocalTunnel
+
+USERNAME = "clchiu"
+NUM_NODES = 1
 NUM_GPUS = 8
 TOKENIZER = "meta-llama/Llama-3.1-8B-Instruct"
 MODEL = "nemo_ckpt/Llama-3.1-8B-Instruct"
+NEMO_IMAGE = "/mnt/nemo2502.sqsh"
 
 def configure_dataset(
     gbs: int = 8,
@@ -53,22 +60,62 @@ def configure_recipe(nodes: int = 1, gpus_per_node: int = 8):
     
     return recipe
 
-def local_executor_torchrun(devices: int = 8) -> run.LocalExecutor:
+def slurm_executor(
+    account: str,
+    nodes: int,
+    devices: int,
+    time: str = "30-00:00:00",
+    container_mounts: Optional[list[str]] = None,
+    custom_env_vars: Optional[dict[str, str]] = None,
+    container_image: str = "nvcr.io/nvidia/nemo:dev",
+    retries: int = 0,
+) -> run.SlurmExecutor:
+
+    mounts = []
+    # Custom mounts are defined here.
+    if container_mounts:
+        mounts.extend(container_mounts)
+
+    # Env vars for jobs are configured here
     env_vars = {
         "TORCH_NCCL_AVOID_RECORD_STREAMS": "1",
         "NCCL_NVLS_ENABLE": "0",
         "NVTE_DP_AMAX_REDUCE_INTERVAL": "0",
         "NVTE_ASYNC_AMAX_REDUCTION": "1",
-        "HF_TOKEN_PATH": "/tokens/huggingface",
-        "CUDA_VISIBLE_DEVICES": ",".join(map(str, range(devices)))
     }
-    executor = run.LocalExecutor(ntasks_per_node=devices, launcher="torchrun", env_vars=env_vars)
-    
+    if custom_env_vars:
+        env_vars |= custom_env_vars
+
+    # This defines the slurm executor.
+    # We connect to the executor via the tunnel defined by user, host and remote_job_dir.
+    executor = run.SlurmExecutor(
+        account=account,
+        nodes=nodes,
+        ntasks_per_node=devices,
+        gpus_per_node=devices,
+        mem="0",
+        exclusive=True,
+        gres="gpu:8",
+        packager=run.Packager(),
+        tunnel=LocalTunnel(job_dir=os.getcwd())
+    )
+
+    executor.container_image = container_image
+    executor.container_mounts = mounts
+    executor.env_vars = env_vars
+    executor.retries = retries
+    executor.time = time
+
     return executor
 
 def run_pretraining():
-    recipe = configure_recipe(gpus_per_node=NUM_GPUS)
-    executor = local_executor_torchrun(devices=NUM_GPUS)
+    recipe = configure_recipe(nodes=NUM_NODES, gpus_per_node=NUM_GPUS)
+    executor = slurm_executor(
+        account=USERNAME,
+        container_image=NEMO_IMAGE, # TODO: Set the container image you want to use for your job
+        nodes=recipe.trainer.num_nodes,
+        devices=recipe.trainer.devices,
+    )
 
     if MODEL:
         restore_config = run.Config(nl.RestoreConfig, path=MODEL)
@@ -81,9 +128,9 @@ def run_pretraining():
         resume_if_exists=True
     )
 
-    with run.Experiment("llama31-8b-pretraining") as exp:
+    with run.Experiment("llama31-8b-pretraining", base_dir=os.getcwd()) as exp:
         exp.add(recipe, executor=executor, name="pretraining")
-        exp.run(sequential=True, tail_logs=True) # This will run the tasks sequentially and stream the logs
+        exp.dryrun()
 
 if __name__ == "__main__":
     run_pretraining()
