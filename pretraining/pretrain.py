@@ -106,41 +106,7 @@ def configure_recipe(args):
     
     return recipe
 
-def slurm_executor(
-    args, 
-    env_vars
-) -> run.SlurmExecutor:
-
-    # Custom mounts are defined here.
-    container_mounts = [f"{WORK_PATH}:{WORK_PATH}"]
-    srun_args = ["--container-writable"]
-
-    tunnel = LocalTunnel(job_dir=os.path.join(WORK_PATH, "experiments"))
-
-    # This defines the slurm executor.
-    executor = run.SlurmExecutor(
-        packager=run.Packager(),
-        env_vars=env_vars,
-        account=args.account,
-        partition=args.partition,
-        time="30-00:00:00",
-        nodes=args.num_nodes,
-        ntasks_per_node=args.num_gpus,
-        gpus_per_node=args.num_gpus,
-        mem="0",
-        gres="gpu:8",
-        exclusive=True,
-        container_image=args.container_image,
-        container_mounts=container_mounts,
-        srun_args=srun_args,
-        tunnel=tunnel,
-    )
-
-    return executor
-
-def run_pretraining(args):
-    recipe = configure_recipe(args)
-
+def configure_executor(args):
     env_vars = {
         "TORCH_NCCL_AVOID_RECORD_STREAMS": "1",
         "NCCL_NVLS_ENABLE": "0",
@@ -148,15 +114,44 @@ def run_pretraining(args):
         "NVTE_ASYNC_AMAX_REDUCTION": "1",
         "HF_TOKEN": args.hf_token,
     }
-
+    
     if args.executor == "slurm":
-        executor = slurm_executor(args, env_vars)
+        # Custom mounts are defined here.
+        container_mounts = [f"{WORK_PATH}:{WORK_PATH}"]
+        srun_args = ["--container-writable"]
+
+        tunnel = LocalTunnel(job_dir=os.path.join(WORK_PATH, "experiments"))
+
+        # This defines the slurm executor.
+        executor = run.SlurmExecutor(
+            packager=run.Packager(),
+            env_vars=env_vars,
+            account=args.account,
+            partition=args.partition,
+            time="30-00:00:00",
+            nodes=args.num_nodes,
+            ntasks_per_node=args.num_gpus,
+            gpus_per_node=args.num_gpus,
+            mem="0",
+            gres="gpu:8",
+            exclusive=True,
+            container_image=args.container_image,
+            container_mounts=container_mounts,
+            srun_args=srun_args,
+            tunnel=tunnel,
+        )
     else:
         executor = run.LocalExecutor(
             launcher="torchrun", 
             ntasks_per_node=args.num_gpus, 
             env_vars=env_vars
         )
+
+    return executor
+
+def run_pretraining(args):
+    recipe = configure_recipe(args)
+    executor = configure_executor(args)
 
     if args.nemo_model:
         restore_config = run.Config(nl.RestoreConfig, path=args.nemo_model)
