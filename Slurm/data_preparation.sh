@@ -4,8 +4,9 @@ ml slurm
 
 PARTITION=defq
 NEMO_PATH=${PWD}/NeMo
-CONTAINER=/mnt/nemo2502.sqsh
+CONTAINER=nvcr.io/nvidia/nemo:dev
 HF_MODEL_ID=Llama-3.1-8B-Instruct
+HF_TOKEN=<HF_TOKEN>
 
 cd ${NEMO_PATH}
 

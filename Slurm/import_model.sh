@@ -5,13 +5,13 @@ ml slurm
 ## 參數設定
 PARTITION=defq
 NEMO_PATH=${PWD}/NeMo
-CONTAINER=/mnt/nemo2502.sqsh
+CONTAINER=nvcr.io/nvidia/nemo:dev
 MODEL=llama3_8b
 HF_MODEL_ID=Llama-3.1-8B-Instruct
 OUTPUT_PATH=${NEMO_PATH}/nemo_ckpt/Llama-3.1-8B-Instruct
 OVERWRITE_EXISTING=false
 
-export HF_TOKEN=???
+export HF_TOKEN=<HF_TOKEN>
 
 if [ ! -d ${NEMO_PATH} ]; then
   mkdir ${NEMO_PATH}

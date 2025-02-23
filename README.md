@@ -141,7 +141,38 @@ python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
 執行以下命令：
 
 ```bash
-python pretraining/pretraining.py
+JOB_NAME=llama31_pretraining
+
+NUM_NODES=1
+NUM_GPUS=8
+
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+HF_TOKEN=<HF_TOKEN>
+
+NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
+
+GBS=2048
+MAX_STEPS=50
+TP=4
+PP=1
+CP=1
+
+DATASET_PATH=data/custom_dataset/preprocessed/
+
+python pretraining/pretrain.py \
+    --executor local \
+    --experiment ${JOB_NAME} \
+    --num_nodes ${NUM_NODES} \
+    --num_gpus ${NUM_GPUS} \  
+    --hf_model_id ${HF_MODEL_ID} \
+    --nemo_model ${NEMO_MODEL} \
+    --hf_token ${HF_TOKEN} \
+    --max_steps ${MAX_STEPS} \
+    --global_batch_size ${GBS} \
+    --tensor_model_parallel_size ${TP} \
+    --pipeline_model_parallel_size ${PP} \
+    --context_parallel_size ${CP} \
+    --dataset_path ${DATASET_PATH}
 ```
 
 ### 指令微調
@@ -159,7 +190,34 @@ python finetuning/download_split_data.py
 針對具體任務或指令語言進行模型微調。執行以下命令：
 
 ```bash
-python finetuning/finetuning.py
+JOB_NAME=llama31_finetuning
+
+NUM_NODES=1
+NUM_GPUS=8
+
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+HF_TOKEN=<HF_TOKEN>
+
+MAX_STEPS=100
+GBS=128
+TP=4
+PP=1
+CP=1
+
+DATASET_PATH=data/alpaca
+
+python finetuning/finetune.py \
+    --experiment ${JOB_NAME} \
+    --num_nodes ${NUM_NODES} \
+    --num_gpus ${NUM_GPUS} \
+    --hf_model_id ${HF_MODEL_ID} \
+    --hf_token ${HF_TOKEN} \
+    --max_steps ${MAX_STEPS} \
+    --global_batch_size ${GBS} \
+    --tensor_model_parallel_size ${TP} \
+    --pipeline_model_parallel_size ${PP} \
+    --context_parallel_size ${CP} \
+    --dataset_path ${DATASET_PATH}
 ```
 
 更多微調設定的詳細資訊，請查閱腳本相關文檔 📄。
