@@ -43,9 +43,10 @@ def configure_dataset(
     seq_length: int = 8192,
 ) -> run.Config[pl.LightningDataModule]:
 
+    data_path = os.path.join(WORK_PATH, args.dataset_path)
     dataset = run.Config(
         llm.FineTuningDataModule,
-        dataset_root=args.dataset_path,
+        dataset_root=data_path,
         seq_length=seq_length,
         global_batch_size=args.global_batch_size,
         micro_batch_size=args.micro_batch_size,
@@ -57,7 +58,7 @@ def configure_dataset(
 
 def configure_recipe(args):
     recipe = llm.llama31_8b.pretrain_recipe(
-        dir="experiments",
+        dir=os.path.join(WORK_PATH, "experiments"),
         name=args.experiment,
         num_nodes=args.num_nodes,
         num_gpus_per_node=args.num_gpus,
@@ -133,7 +134,7 @@ def run_finetuning(args):
     if args.nemo_model:
         checkpoint = args.nemo_model
     else:
-        checkpoint = find_latest_checkpoint(ckpt_path="experiments/llama31_pretraining/checkpoints")
+        checkpoint = find_latest_checkpoint(ckpt_path=os.path.join(WORK_PATH, "experiments/llama31_pretraining/checkpoints"))
 
     recipe.resume = run.Config(
         nl.AutoResume,
@@ -159,7 +160,7 @@ def parse_args():
     parser.add_argument("-N", "--num_nodes", type=int, default=1, help="Number of nodes")
     parser.add_argument("-G", "--num_gpus", type=int, default=8, help="Number of GPUs")
     parser.add_argument("--hf_model_id", type=str, required=True, help="Huggingface Model ID")
-    parser.add_argument("-n", "--nemo_model", type=str, help="Pretrained NeMo Model path")
+    parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")
 
     # 訓練參數

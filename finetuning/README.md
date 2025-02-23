@@ -72,7 +72,7 @@ data/alpaca/
 
    GBS=128
    MAX_STEPS=100
-   TP=4
+   TP=2
    PP=1
    CP=1
 
