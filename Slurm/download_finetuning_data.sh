@@ -5,7 +5,6 @@ ml slurm
 PARTITION=defq
 NEMO_PATH=${PWD}/NeMo
 CONTAINER=nvcr.io/nvidia/nemo:dev
-HF_MODEL_ID=Llama-3.1-8B-Instruct
 
 srun -p ${PARTITION} -G 8 \
 --container-image $CONTAINER \

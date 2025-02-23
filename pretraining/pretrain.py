@@ -79,8 +79,13 @@ def configure_dataset(
     return dataset, total_steps
 
 def configure_recipe(args):
-    recipe = llm.llama31_8b.pretrain_recipe(
-        dir=os.path.join(WORK_PATH, "experiments"),
+    if args.model_size in ["8B", "8b"]:
+        model = llm.llama31_8b
+    elif args.model_size in ["70B", "70b"]:
+        model = llm.llama31_70b
+    
+    recipe = model.pretrain_recipe(
+        dir="nemo_experiments",
         name=args.experiment,
         num_nodes=args.num_nodes,
         num_gpus_per_node=args.num_gpus,
@@ -181,6 +186,8 @@ def parse_args():
     parser.add_argument("-E", "--experiment", type=str, default="llama31_pretraining", help="Name of experiment")
     parser.add_argument("-N", "--num_nodes", type=int, default=1, help="Number of nodes")
     parser.add_argument("-G", "--num_gpus", type=int, default=8, help="Number of GPUs")
+    parser.add_argument("-M", "--model_size", type=str, choices=["8B", "8b", "70B", "70b"], default="8B", 
+                        help="Select Llama3 model size: '70B' or '8B'")
     parser.add_argument("--hf_model_id", type=str, required=True, help="Huggingface Model ID")
     parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")

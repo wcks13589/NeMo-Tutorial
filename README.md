@@ -146,25 +146,25 @@ JOB_NAME=llama31_pretraining
 NUM_NODES=1
 NUM_GPUS=8
 
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+HF_MODEL_ID=Llama-3.1-8B-Instruct
+NEMO_MODEL=nemo_ckpt/${HF_MODEL_ID}
 HF_TOKEN=<HF_TOKEN>
 
-NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
-
-GBS=2048
-MAX_STEPS=50
 TP=2
 PP=1
 CP=1
 
+GBS=2048
+MAX_STEPS=100
 DATASET_PATH=data/custom_dataset/preprocessed/
 
 python pretraining/pretrain.py \
     --executor local \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
-    --num_gpus ${NUM_GPUS} \  
-    --hf_model_id ${HF_MODEL_ID} \
+    --num_gpus ${NUM_GPUS} \
+    --model_size 8B \
+    --hf_model_id meta-llama/${HF_MODEL_ID} \
     --nemo_model ${NEMO_MODEL} \
     --hf_token ${HF_TOKEN} \
     --max_steps ${MAX_STEPS} \
@@ -197,15 +197,16 @@ JOB_NAME=llama31_finetuning
 NUM_NODES=1
 NUM_GPUS=8
 
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+HF_MODEL_ID=Llama-3.1-8B-Instruct
+NEMO_MODEL= # [Optional]
 HF_TOKEN=<HF_TOKEN>
 
-MAX_STEPS=100
-GBS=128
-TP=4
+TP=2
 PP=1
 CP=1
 
+MAX_STEPS=100
+GBS=128
 DATASET_PATH=data/alpaca
 
 python finetuning/finetune.py \
@@ -213,6 +214,7 @@ python finetuning/finetune.py \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
+    --model_size 8B \
     --hf_model_id ${HF_MODEL_ID} \
     --hf_token ${HF_TOKEN} \
     --max_steps ${MAX_STEPS} \
@@ -233,7 +235,7 @@ python finetuning/finetune.py \
 
 Option 1: 透過Python
 ```bash
-NEMO_MODEL=experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
+NEMO_MODEL=results/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
 OUTPUT_PATH=hf_ckpt
 
 python convert_ckpt/convert_from_nemo_to_hf.py \
@@ -243,7 +245,7 @@ python convert_ckpt/convert_from_nemo_to_hf.py \
 
 Option 2: 透過Cli
 ```bash
-NEMO_MODEL=experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.38-step\=99-consumed_samples\=1600.0-last/
+NEMO_MODEL=results/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.38-step\=99-consumed_samples\=1600.0-last/
 OUTPUT_PATH=hf_ckpt
 
 nemo llm export -y path=${NEMO_MODEL} output_path=${OUTPUT_PATH} target=hf

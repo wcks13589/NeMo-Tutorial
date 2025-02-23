@@ -73,17 +73,16 @@ data
    NUM_NODES=1
    NUM_GPUS=8
 
-   HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+   HF_MODEL_ID=Llama-3.1-8B-Instruct
+   NEMO_MODEL=nemo_ckpt/${HF_MODEL_ID}
    HF_TOKEN=<HF_TOKEN>
 
-   NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
-
-   GBS=2048
-   MAX_STEPS=100
    TP=2
    PP=1
    CP=1
 
+   GBS=2048
+   MAX_STEPS=100
    DATASET_PATH=data/custom_dataset/preprocessed/
 
    python pretraining/pretrain.py \
@@ -91,7 +90,8 @@ data
       --experiment ${JOB_NAME} \
       --num_nodes ${NUM_NODES} \
       --num_gpus ${NUM_GPUS} \
-      --hf_model_id ${HF_MODEL_ID} \
+      --model_size 8B \
+      --hf_model_id meta-llama/${HF_MODEL_ID} \
       --nemo_model ${NEMO_MODEL} \
       --hf_token ${HF_TOKEN} \
       --max_steps ${MAX_STEPS} \
@@ -130,8 +130,8 @@ data
 ## **模型與資料設定**
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
-| `--hf_model_id` | `str` | **(必填)** | 指定要使用的 Hugging Face 模型 ID，例如 `"meta-llama/Llama-3-8B"`。 |
-| `-n, --nemo_model` | `str` | `None` | 指定已訓練好的 NeMo 模型權重檔案（通常用於微調）。 |
+| `--hf_model_id` | `str` | **(必填)** | 指定要使用的 Hugging Face 模型 ID，例如 `"meta-llama/Llama-3.1-8B-Instruct"`。 |
+| `-n, --nemo_model` | `str` | `None` | 指定預訓練好的 NeMo 模型權重路徑。 |
 | `--hf_token` | `str` | **(必填)** | Hugging Face 的 API Token，用以下載 tokenizer。 |
 | `--dataset_path` | `str` | **(必填)** | 設定訓練資料夾的路徑，此資料夾應包含 `.bin` 和 `.idx` 檔案。 |
 
@@ -163,6 +163,6 @@ data
 
 ## 訓練過程輸出與紀錄
 
-訓練過程中的輸出會被記錄於實驗目錄`experiments`下，並支持即時監控。
+訓練過程中的輸出會被記錄於實驗目錄`results`下，並支持即時監控。
 
 ---

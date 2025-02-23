@@ -8,20 +8,31 @@ PARTITION=defq
 CONTAINER=nvcr.io/nvidia/nemo:dev
 JOB_NAME=llama31_finetuning
 
-NUM_NODES=1
+NUM_NODES=4
 NUM_GPUS=8
 
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
-NEMO_MODEL=
+# Manually set the model size ("8B" or "70B")
+MODEL_SIZE="8B"  # Change to "70B" to switch the model
+if [[ "$MODEL_SIZE" == "8B" ]]; then
+    HF_MODEL_ID=Llama-3.1-8B-Instruct
+    TP=2
+    PP=1
+    CP=1
+elif [[ "$MODEL_SIZE" == "70B" ]]; then
+    HF_MODEL_ID=Llama-3.3-70B-Instruct
+    TP=8
+    PP=4
+    CP=1
+else
+    echo "Error: MODEL_TYPE must be '8B' or '70B'."
+    exit 1
+fi
 
+NEMO_MODEL=
 HF_TOKEN=<HF_TOKEN>
 
 MAX_STEPS=100
 GBS=128
-TP=2
-PP=1
-CP=1
-
 DATASET_PATH=data/alpaca
 
 experiment_id=$(srun -p ${PARTITION} -G 8 \
@@ -39,7 +50,7 @@ bash -c \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
-    --hf_model_id ${HF_MODEL_ID} \
+    --hf_model_id meta-llama/${HF_MODEL_ID} \
     --nemo_model ${NEMO_MODEL} \
     --hf_token ${HF_TOKEN} \
     --max_steps ${MAX_STEPS} \

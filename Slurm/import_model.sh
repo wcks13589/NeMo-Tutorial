@@ -6,9 +6,14 @@ ml slurm
 PARTITION=defq
 NEMO_PATH=${PWD}/NeMo
 CONTAINER=nvcr.io/nvidia/nemo:dev
+
 MODEL=llama3_8b
+# MODEL=llama3_70b
+
 HF_MODEL_ID=Llama-3.1-8B-Instruct
-OUTPUT_PATH=${NEMO_PATH}/nemo_ckpt/Llama-3.1-8B-Instruct
+# HF_MODEL_ID=Llama-3.3-70B-Instruct
+
+OUTPUT_PATH=${NEMO_PATH}/nemo_ckpt/${HF_MODEL_ID}
 OVERWRITE_EXISTING=false
 
 export HF_TOKEN=<HF_TOKEN>
