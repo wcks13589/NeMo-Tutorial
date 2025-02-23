@@ -153,7 +153,7 @@ NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
 
 GBS=2048
 MAX_STEPS=50
-TP=4
+TP=2
 PP=1
 CP=1
 
@@ -174,6 +174,8 @@ python pretraining/pretrain.py \
     --context_parallel_size ${CP} \
     --dataset_path ${DATASET_PATH}
 ```
+
+更多欲訓練的詳細參數資訊，請查閱`pretraining`資料夾內的說明文件 📄。
 
 ### 指令微調
 
@@ -207,6 +209,7 @@ CP=1
 DATASET_PATH=data/alpaca
 
 python finetuning/finetune.py \
+    --executor local
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
@@ -220,7 +223,7 @@ python finetuning/finetune.py \
     --dataset_path ${DATASET_PATH}
 ```
 
-更多微調設定的詳細資訊，請查閱腳本相關文檔 📄。
+更多微調的詳細參數資訊，請查閱`finetuning`資料夾內的說明文件 📄。
 
 ### 4️⃣ 模型轉換：從 NeMo 匯出至 Huggingface 🔃
 
@@ -230,7 +233,7 @@ python finetuning/finetune.py \
 
 Option 1: 透過Python
 ```bash
-NEMO_MODEL=nemo-experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
+NEMO_MODEL=experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
 OUTPUT_PATH=hf_ckpt
 
 python convert_ckpt/convert_from_nemo_to_hf.py \
@@ -240,13 +243,11 @@ python convert_ckpt/convert_from_nemo_to_hf.py \
 
 Option 2: 透過Cli
 ```bash
-NEMO_MODEL=nemo-experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.55-step\=9-consumed_samples\=80.0-last/
+NEMO_MODEL=experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.38-step\=99-consumed_samples\=1600.0-last/
 OUTPUT_PATH=hf_ckpt
 
 nemo llm export -y path=${NEMO_MODEL} output_path=${OUTPUT_PATH} target=hf
 ```
-
-具體參數使用指南可於腳本的 README 文件中找到 📖。
 
 ---
 
