@@ -58,7 +58,7 @@ data/alpaca/
 
 1. 確保資料按照上述格式與結構準備好。
 
-2. 執行 `finetuning.py`：
+2. 執行 `finetune.py`：
 
    ```bash
    JOB_NAME=llama31_finetuning

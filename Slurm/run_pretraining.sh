@@ -24,7 +24,7 @@ elif [[ "$MODEL_SIZE" == "70B" ]]; then
     PP=4
     CP=1
 else
-    echo "Error: MODEL_TYPE must be '8B' or '70B'."
+    echo "Error: MODEL_SIZE must be '8B' or '70B'."
     exit 1
 fi
 
