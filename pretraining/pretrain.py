@@ -102,6 +102,8 @@ def configure_recipe(args):
     recipe.trainer.strategy.context_parallel_size = args.context_parallel_size
     recipe.trainer.strategy.sequence_parallel=True
     
+    recipe.optim.config.lr = 1e-5
+
     recipe.log.ckpt.save_optim_on_train_end = True
     
     return recipe
@@ -171,16 +173,21 @@ def run_pretraining(args):
 def parse_args():
     parser = argparse.ArgumentParser(description="NeMo Pretraining Arguments")
     
+    # 實驗執行方式
     parser.add_argument("--executor", type=str, choices=["slurm", "local"], default="local",
-                        help="選擇執行方式: 'slurm'（使用 Slurm）或 'local'（單機執行）")
+                        help="Select execution mode: 'slurm' (Multiple Nodes) or 'local' (Single Node).")
+    parser.add_argument("-E", "--experiment", type=str, default="llama31_pretraining", help="Name of experiment")
     
+    # Slurm 參數設定
     parser.add_argument("-a", "--account", type=str, default="root", help="Slurm partition name")
     parser.add_argument("-p", "--partition", type=str, default="defq", help="Slurm partition name")
     parser.add_argument("-i", "--container_image", type=str, default="nvcr.io/nvidia/nemo:dev", help="NEMO image path")
     
-    parser.add_argument("-E", "--experiment", type=str, default="llama31_pretraining", help="Name of experiment")
+    # 硬體設定
     parser.add_argument("-N", "--num_nodes", type=int, default=1, help="Number of nodes")
     parser.add_argument("-G", "--num_gpus", type=int, default=8, help="Number of GPUs")
+
+    # 模型設定
     parser.add_argument("-M", "--model_size", type=str, choices=["8B", "8b", "70B", "70b"], default="8B", 
                         help="Select Llama3 model size: '70B' or '8B'")
     parser.add_argument("--hf_model_id", type=str, required=True, help="Huggingface Model ID")
@@ -188,17 +195,20 @@ def parse_args():
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")
 
     # 訓練參數
-    parser.add_argument("--max_steps", type=int, default=None)
+    parser.add_argument("--max_steps", type=int, default=None,
+                        help="The number of training steps (updates) for the model. "
+                        "Each step updates the model parameters once. If not set, the default training schedule will be used.")
     parser.add_argument("-g", "--global_batch_size", type=int, default=2048, help="Global batch size (must be multiple of micro_batch_size * data parallel size)")
     parser.add_argument("-m", "--micro_batch_size", type=int, default=1, help="Micro batch size per data parallel group")
 
-    # 模型平行化參數
+    # 模型平行化設定
     parser.add_argument("-T", "--tensor_model_parallel_size", type=int, default=1,
                         help="Tensor model parallelism size")
     parser.add_argument("-P", "--pipeline_model_parallel_size", type=int, default=1,
                         help="Pipeline model parallelism size")
     parser.add_argument("-C", "--context_parallel_size", type=int, default=1,
                         help="Context parallelism size (usually 1, unless using advanced parallelism)")
+    # 資料集路徑
     parser.add_argument("--dataset_path", type=str, required=True, 
                         help="Path to the folder containing the preprocessed dataset. "
                         "This folder should include files named in the format: "

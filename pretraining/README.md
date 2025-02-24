@@ -108,13 +108,13 @@ data
 
 以下是 `pretrain.py` 訓練腳本的參數說明。你可以透過指令行參數來設定模型訓練的方式，例如選擇執行環境、指定模型、設定批次大小等。
 
-## **基本執行選項**
+## **實驗執行方式**
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
 | `--executor` | `str` | `local` | 選擇執行方式，可選 `slurm`（使用 Slurm 叢集）或 `local`（單機執行）。 |
 | `-E, --experiment` | `str` | `llama31_pretraining` | 設定實驗名稱，這會影響輸出資料夾的命名。 |
 
-## **Slurm 相關設定**
+## **Slurm 參數設定**
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
 | `-a, --account` | `str` | `root` | Slurm 的帳戶名稱，適用於需要多帳戶管理的 HPC 環境。 |
@@ -127,15 +127,15 @@ data
 | `-N, --num_nodes` | `int` | `1` | 設定要使用的計算節點數量（適用於多機環境）。 |
 | `-G, --num_gpus` | `int` | `8` | 每個計算節點使用的 GPU 數量（如果是單機訓練，通常設定為可用 GPU 數）。 |
 
-## **模型與資料設定**
+## **模型設定**
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
+| `-M, --model_size` | `str` | `8B` | 設定欲訓練的模型大小，預設包含 `8B` 與 `70B` 兩種選項 |
 | `--hf_model_id` | `str` | **(必填)** | 指定要使用的 Hugging Face 模型 ID，例如 `"meta-llama/Llama-3.1-8B-Instruct"`。 |
 | `-n, --nemo_model` | `str` | `None` | 指定預訓練好的 NeMo 模型權重路徑。 |
 | `--hf_token` | `str` | **(必填)** | Hugging Face 的 API Token，用以下載 tokenizer。 |
-| `--dataset_path` | `str` | **(必填)** | 設定訓練資料夾的路徑，此資料夾應包含 `.bin` 和 `.idx` 檔案。 |
 
-## **訓練超參數**
+## **訓練參數**
 | 參數 | 類型 | 預設值 | 說明 |
 |------|------|--------|------|
 | `--max_steps` | `int` | `None` | 設定最大訓練步數（如果不設定，則以資料集大小計算 1 epoch 來決定）。 |
@@ -148,6 +148,11 @@ data
 | `-T, --tensor_model_parallel_size` | `int` | `1` | 設定 Tensor Model Parallelism（張量模型平行化）。 |
 | `-P, --pipeline_model_parallel_size` | `int` | `1` | 設定 Pipeline Model Parallelism（管線平行化）。 |
 | `-C, --context_parallel_size` | `int` | `1` | 設定 Context Parallelism（上下文平行化）。 |
+
+## **資料集路徑**
+| 參數 | 類型 | 預設值 | 說明 |
+|------|------|--------|------|
+| `-D, --dataset_path` | `str` | **(必填)** | 設定訓練資料夾的路徑，此資料夾應包含 .bin 和 .idx 檔案。 |
 
 ---
 
@@ -163,6 +168,6 @@ data
 
 ## 訓練過程輸出與紀錄
 
-訓練過程中的輸出會被記錄於實驗目錄`results`下，並支持即時監控。
+訓練過程中的輸出會被記錄於實驗目錄`nemo_experiments`下，並支持即時監控。
 
 ---
