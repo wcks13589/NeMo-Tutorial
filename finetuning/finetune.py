@@ -140,7 +140,12 @@ def run_finetuning(args):
 
     recipe.resume = run.Config(
         nl.AutoResume,
-        restore_config=run.Config(nl.RestoreConfig, path=checkpoint),
+        restore_config=run.Config(
+            nl.RestoreConfig,
+            path=checkpoint,
+            load_model_state=True,
+            load_optim_state=False
+        )
         resume_if_exists=True
     )
 
@@ -188,7 +193,7 @@ def parse_args():
                         help="Context parallelism size (usually 1, unless using advanced parallelism)")
 
     # 資料集路徑
-    parser.add_argument("--dataset_path", type=str, required=True, 
+    parser.add_argument("-D", "--dataset_path", type=str, required=True,
                         help="Path to the folder containing the preprocessed dataset. "
                         "This folder should include files named in the format: "
                         "'training.jsonl', 'validation.jsonl' 'test.jsonl'.")

@@ -156,7 +156,12 @@ def run_pretraining(args):
     executor = configure_executor(args)
 
     if args.nemo_model:
-        restore_config = run.Config(nl.RestoreConfig, path=args.nemo_model)
+        restore_config = run.Config(
+            nl.RestoreConfig,
+            path=args.nemo_model,
+            load_model_state=True,
+            load_optim_state=False
+        )
     else:
         restore_config = None
 
@@ -209,7 +214,7 @@ def parse_args():
     parser.add_argument("-C", "--context_parallel_size", type=int, default=1,
                         help="Context parallelism size (usually 1, unless using advanced parallelism)")
     # 資料集路徑
-    parser.add_argument("--dataset_path", type=str, required=True, 
+    parser.add_argument("-D", "--dataset_path", type=str, required=True,
                         help="Path to the folder containing the preprocessed dataset. "
                         "This folder should include files named in the format: "
                         "'<dataset_name>_text_document.bin' and '<dataset_name>_text_document.idx'.")
