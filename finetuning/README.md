@@ -66,7 +66,7 @@ data/alpaca/
    NUM_NODES=1
    NUM_GPUS=8
 
-   HF_MODEL_ID=Llama-3.1-8B-Instruct
+   HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
    NEMO_MODEL= # [Optional]
    HF_TOKEN=<HF_TOKEN>
 
@@ -85,8 +85,8 @@ data/alpaca/
       --num_gpus ${NUM_GPUS} \
       --model_size 8B \
       --hf_model_id meta-llama/${HF_MODEL_ID} \
-      --nemo_model ${NEMO_MODEL} \
       --hf_token ${HF_TOKEN} \
+      --nemo_model ${NEMO_MODEL} \
       --max_steps ${MAX_STEPS} \
       --global_batch_size ${GBS} \
       --tensor_model_parallel_size ${TP} \

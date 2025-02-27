@@ -197,7 +197,7 @@ JOB_NAME=llama31_finetuning
 NUM_NODES=1
 NUM_GPUS=8
 
-HF_MODEL_ID=Llama-3.1-8B-Instruct
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 NEMO_MODEL= # [Optional]
 HF_TOKEN=<HF_TOKEN>
 
@@ -210,13 +210,14 @@ GBS=128
 DATASET_PATH=data/alpaca
 
 python finetuning/finetune.py \
-    --executor local
+    --executor local \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
     --model_size 8B \
     --hf_model_id ${HF_MODEL_ID} \
     --hf_token ${HF_TOKEN} \
+    --nemo_model ${NEMO_MODEL} \
     --max_steps ${MAX_STEPS} \
     --global_batch_size ${GBS} \
     --tensor_model_parallel_size ${TP} \

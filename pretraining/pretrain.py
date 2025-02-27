@@ -13,6 +13,8 @@ from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
 
 from nemo_run.core.tunnel.client import LocalTunnel
 
+from lightning.pytorch.loggers import WandbLogger
+
 WORK_PATH = os.getcwd()
 
 def calculate_training_steps(
@@ -90,6 +92,9 @@ def configure_recipe(args):
         num_nodes=args.num_nodes,
         num_gpus_per_node=args.num_gpus,
     )
+
+    recipe.model.config.seq_length = args.seq_legth
+    recipe.data.seq_length = args.seq_legth
     recipe.data, one_epoch_steps = configure_dataset(args, seq_length=recipe.data.seq_length)
     recipe.trainer.devices = args.num_gpus
     
@@ -105,7 +110,15 @@ def configure_recipe(args):
     recipe.optim.config.lr = 1e-5
 
     recipe.log.ckpt.save_optim_on_train_end = True
-    
+    recipe.log.ckpt.monitor = "reduced_train_loss"
+    recipe.log.ckpt.save_top_k = 10
+
+    if args.wandb:
+        recipe.log.wandb = WandbLogger(
+            project=args.wandb_project or args.experiment,
+            name=args.wandb_name or recipe.log.name
+        )
+
     return recipe
 
 def configure_executor(args):
@@ -196,8 +209,9 @@ def parse_args():
     parser.add_argument("-M", "--model_size", type=str, choices=["8B", "8b", "70B", "70b"], default="8B", 
                         help="Select Llama3 model size: '70B' or '8B'")
     parser.add_argument("--hf_model_id", type=str, required=True, help="Huggingface Model ID")
-    parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")
+    parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
+    parser.add_argument("-s", "--seq_length", type=int, default=8192, help="Sequence length for the training")
 
     # 訓練參數
     parser.add_argument("--max_steps", type=int, default=None,
@@ -218,9 +232,12 @@ def parse_args():
                         help="Path to the folder containing the preprocessed dataset. "
                         "This folder should include files named in the format: "
                         "'<dataset_name>_text_document.bin' and '<dataset_name>_text_document.idx'.")
+    # WandB 相關參數
+    parser.add_argument("--wandb", action="store_true", help="Enable WandB logging")
+    parser.add_argument("--wandb_project", type=str, default=None, help="WandB project name")
+    parser.add_argument("--wandb_name", type=str, default=None, help="WandB run name")
 
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
