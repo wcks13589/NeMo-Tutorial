@@ -59,9 +59,9 @@ def configure_dataset(
     return dataset
 
 def configure_recipe(args):
-    if args.model_size in ["8B", "8b"]:
+    if args.model_size.lower() == "8b":
         model = llm.llama31_8b
-    elif args.model_size in ["70B", "70b"]:
+    elif args.model_size.lower() == "70b":
         model = llm.llama31_70b
     
     recipe = model.finetune_recipe(
@@ -71,9 +71,9 @@ def configure_recipe(args):
         num_gpus_per_node=args.num_gpus,
         peft_scheme=None,
         seq_length=args.seq_length,
-        packed_sequence=False,
+        packed_sequence=True,
     )
-    
+
     recipe.data = configure_dataset(args, seq_length=recipe.data.seq_length)
     recipe.trainer.devices = args.num_gpus
     
@@ -85,6 +85,8 @@ def configure_recipe(args):
     recipe.trainer.strategy.pipeline_model_parallel_size = args.pipeline_model_parallel_size
     recipe.trainer.strategy.context_parallel_size = args.context_parallel_size
     recipe.trainer.strategy.sequence_parallel=True
+    # Set False, if you have an issue when loading checkpoint.
+    # recipe.trainer.strategy.ckpt_load_strictness = False
 
     recipe.optim.config.lr = 5e-6
     
@@ -159,7 +161,7 @@ def run_finetuning(args):
             path=checkpoint,
             load_model_state=True,
             load_optim_state=False
-        )
+        ),
         resume_if_exists=True
     )
 

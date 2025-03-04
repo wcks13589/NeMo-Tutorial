@@ -81,9 +81,9 @@ def configure_dataset(
     return dataset, total_steps
 
 def configure_recipe(args):
-    if args.model_size in ["8B", "8b"]:
+    if args.model_size.lower() == "8b":
         model = llm.llama31_8b
-    elif args.model_size in ["70B", "70b"]:
+    elif args.model_size.lower() == "70b":
         model = llm.llama31_70b
     
     recipe = model.pretrain_recipe(
@@ -93,8 +93,8 @@ def configure_recipe(args):
         num_gpus_per_node=args.num_gpus,
     )
 
-    recipe.model.config.seq_length = args.seq_legth
-    recipe.data.seq_length = args.seq_legth
+    recipe.model.config.seq_length = args.seq_length
+    recipe.data.seq_length = args.seq_length
     recipe.data, one_epoch_steps = configure_dataset(args, seq_length=recipe.data.seq_length)
     recipe.trainer.devices = args.num_gpus
     
@@ -113,11 +113,11 @@ def configure_recipe(args):
     recipe.log.ckpt.monitor = "reduced_train_loss"
     recipe.log.ckpt.save_top_k = 10
 
-    if args.wandb:
-        recipe.log.wandb = WandbLogger(
-            project=args.wandb_project or args.experiment,
-            name=args.wandb_name or recipe.log.name
-        )
+    # if args.wandb:
+    #     recipe.log.wandb = WandbLogger(
+    #         project=args.wandb_project or args.experiment,
+    #         name=args.wandb_name or recipe.log.name
+    #     )
 
     return recipe
 
