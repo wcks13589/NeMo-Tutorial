@@ -94,11 +94,11 @@ def configure_recipe(args):
     recipe.log.ckpt.monitor = "val_loss"
     recipe.log.ckpt.save_top_k = 10
 
-    if args.wandb:
-        recipe.log.wandb = WandbLogger(
-            project=args.wandb_project or args.experiment,
-            name=args.wandb_name or recipe.log.name
-        )
+    # if args.wandb:
+    #     recipe.log.wandb = WandbLogger(
+    #         project=args.wandb_project or args.experiment,
+    #         name=args.wandb_name or recipe.log.name
+    #     )
     
     return recipe
 
