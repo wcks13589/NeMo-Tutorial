@@ -73,7 +73,7 @@ def configure_dataset(
         global_batch_size=args.global_batch_size,
         micro_batch_size=args.micro_batch_size,
         tokenizer=run.Config(AutoTokenizer, pretrained_model_name=args.hf_model_id),
-        split="9998,2,0",
+        split="998,1,0",
         num_workers=0,
         index_mapping_dir=os.path.join(WORK_PATH, os.path.dirname(os.path.dirname(args.dataset_path)), "index_mapping"),
     )
@@ -110,7 +110,6 @@ def configure_recipe(args):
     recipe.optim.config.lr = 1e-5
 
     recipe.log.ckpt.save_optim_on_train_end = True
-    recipe.log.ckpt.monitor = "reduced_train_loss"
     recipe.log.ckpt.save_top_k = 10
 
     # if args.wandb:
