@@ -88,6 +88,12 @@ def configure_recipe(args):
     # Set False, if you have an issue when loading checkpoint.
     # recipe.trainer.strategy.ckpt_load_strictness = False
 
+    if args.fp8:
+        recipe.trainer.plugins.fp8 = "hybrid"
+        recipe.trainer.plugins.fp8_amax_history_len = 1024
+        recipe.trainer.plugins.fp8_amax_compute_algo = "max",
+        recipe.trainer.plugins.fp8_params = True
+
     recipe.optim.config.lr = 5e-6
     
     recipe.log.ckpt.save_optim_on_train_end = True
@@ -193,6 +199,7 @@ def parse_args():
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")
     parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("-s", "--seq_length", type=int, default=8192, help="Sequence length for the training")
+    parser.add_argument("--fp8", action="store_true", help="Enable FP8 training mode")
 
     # 訓練參數
     parser.add_argument("--max_steps", type=int, default=None,
