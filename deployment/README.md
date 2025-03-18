@@ -5,7 +5,7 @@
 ## 環境設定
 
 本教學適用於 NVIDIA Triton 容器環境：  
-`nvcr.io/nvidia/tritonserver:24.12-trtllm-python-py3`
+`nvcr.io/nvidia/tritonserver:25.02-trtllm-python-py3`
 
 請確保您已安裝並設定好 Docker。
 
@@ -18,7 +18,7 @@ docker run --gpus all --rm -it \
   --shm-size=2g \
   -p 8888:8888 \
   -v ${PWD}:/workspace \
-  nvcr.io/nvidia/tritonserver:24.12-trtllm-python-py3 \
+  nvcr.io/nvidia/tritonserver:25.02-trtllm-python-py3 \
   bash -c "pip3 install jupyterlab && jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser"
 ```
 
