@@ -118,11 +118,13 @@ def configure_recipe(args):
     recipe.log.ckpt.save_optim_on_train_end = True
     recipe.log.ckpt.save_top_k = 10
 
-    # if args.wandb:
-    #     recipe.log.wandb = WandbLogger(
-    #         project=args.wandb_project or args.experiment,
-    #         name=args.wandb_name or recipe.log.name
-    #     )
+    if args.wandb:
+        recipe.log.wandb = run.Config(
+            WandbLogger,
+            project=args.wandb_project or args.experiment,
+            name=args.wandb_name or recipe.log.name,
+            config={},
+        )
 
     return recipe
 
@@ -133,6 +135,7 @@ def configure_executor(args):
         "NVTE_DP_AMAX_REDUCE_INTERVAL": "0",
         "NVTE_ASYNC_AMAX_REDUCTION": "1",
         "HF_TOKEN": args.hf_token,
+        "WANDB_API_KEY": args.wandb_token,
     }
     
     if args.executor == "slurm":
@@ -242,6 +245,7 @@ def parse_args():
     parser.add_argument("--wandb", action="store_true", help="Enable WandB logging")
     parser.add_argument("--wandb_project", type=str, default=None, help="WandB project name")
     parser.add_argument("--wandb_name", type=str, default=None, help="WandB run name")
+    parser.add_argument("--wandb_token", type=str, default=None, help="WandB personal token")
 
     return parser.parse_args()
 
