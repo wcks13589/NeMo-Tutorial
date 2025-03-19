@@ -21,30 +21,30 @@ class OpenAIRequester:
         }
         # self.api_urls = {url: 1.0 for url in api_urls}  # 初始每個 API 響應時間相同
 
-    async def send_request(self, session, prompt):
+    async def send_request(self, session, request):
         """發送一個 OpenAI API 請求"""
         payload = {
             "model": self.model_name,
-            "messages": [{"role": "user", "content": prompt["prompt"]}],
-            "temperature": prompt["temperature"],
-            "top_p": prompt["top_p"],
-            "max_tokens": prompt["max_tokens"],
+            "messages": [{"role": "user", "content": request["prompt"]}],
+            "temperature": request["temperature"],
+            "top_p": request["top_p"],
+            "max_tokens": request["max_tokens"],
         }
 
         async with session.post(self.endpoint, json=payload, headers=self.headers) as response:
             result = await response.json()
-            prompt["response"] = result["choices"][0]["message"]["content"]
+            request["response"] = result["choices"][0]["message"]["content"]
             
-            return prompt
+            return request
 
-    # async def send_request(self, session, prompt):
+    # async def send_request(self, session, request):
     #     """選擇最快的 API 來發送請求"""
     #     fastest_url = min(self.api_urls, key=self.api_urls.get)  # 選擇響應時間最短的 API
     #     start_time = asyncio.get_event_loop().time()
 
     #     payload = {
     #         "model": "engine",
-    #         "messages": [{"role": "user", "content": prompt}],
+    #         "messages": [{"role": "user", "content": request["prompt"]}],
     #         "temperature": 0.2,
     #         "top_p": 0.7
     #     }
@@ -53,7 +53,11 @@ class OpenAIRequester:
     #         result = await response.json()
     #         elapsed_time = asyncio.get_event_loop().time() - start_time
     #         self.api_urls[fastest_url] = (self.api_urls[fastest_url] + elapsed_time) / 2  # 更新 API 響應時間
-    #         return {"prompt": prompt, "response": result, "url_used": fastest_url}
+            
+    #         request["response"] = result["choices"][0]["message"]["content"]
+    #         request["url"] = fastest_url
+            
+    #         return request
 
 class BatchProcessor:
     """批次處理 OpenAI API 請求"""
@@ -62,19 +66,19 @@ class BatchProcessor:
         self.batch_size = batch_size
         self.semaphore = asyncio.Semaphore(batch_size)  # 限制同時執行的請求數
 
-    async def worker(self, session, prompt, results):
+    async def worker(self, session, request, results):
         """處理單個請求的 worker，確保 batch_size 平行化執行"""
         async with self.semaphore:  # 限制同時處理的請求數
-            response = await self.requester.send_request(session, prompt)
+            response = await self.requester.send_request(session, request)
             results.append(response)  # 儲存結果
 
-    async def process_requests(self, prompts):
+    async def process_requests(self, requests):
         """不斷維持 batch_size 的請求數"""
         results = []
         tasks = []
         async with aiohttp.ClientSession() as session:
-            for prompt in prompts:
-                task = asyncio.create_task(self.worker(session, prompt, results))
+            for request in requests:
+                task = asyncio.create_task(self.worker(session, request, results))
                 tasks.append(task)
                 
                 # 當 tasks 達到 batch_size，等其中一個完成後才補充新的
@@ -87,9 +91,9 @@ class BatchProcessor:
         
         return results
 
-    def run(self, prompts):
+    def run(self, requests):
         """同步方法，讓外部程式碼可以直接呼叫來處理 batch"""
-        return asyncio.run(self.process_requests(prompts))
+        return asyncio.run(self.process_requests(requests))
 
 # === JSONL 儲存函數 ===
 def save_to_jsonl(data, file_path):

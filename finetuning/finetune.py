@@ -3,17 +3,17 @@ import glob
 import argparse
 
 import pytorch_lightning as pl
-
-import nemo_run as run
-from nemo.collections import llm
-from nemo import lightning as nl
-from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
-
-from nemo_run.core.tunnel.client import LocalTunnel
-
 from lightning.pytorch.loggers import WandbLogger
 
+from nemo import lightning as nl
+from nemo.collections import llm
+from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
+
 WORK_PATH = os.getcwd()
+os.environ['NEMORUN_HOME'] = WORK_PATH
+
+import nemo_run as run
+from nemo_run.core.tunnel.client import LocalTunnel
 
 SYSTEM_PROMPT = (
     "You are a knowledgeable assistant trained to provide accurate and helpful information. "
@@ -117,8 +117,13 @@ def configure_executor(args):
         "NVTE_DP_AMAX_REDUCE_INTERVAL": "0",
         "NVTE_ASYNC_AMAX_REDUCTION": "1",
         "HF_TOKEN": args.hf_token,
-        "WANDB_API_KEY": args.wandb_token,
     }
+
+    if args.wandb:
+        if args.wandb_token:
+            env_vars["WANDB_API_KEY"] = args.wandb_token
+        else:
+            print("⚠️ WandB is enabled, but WANDB_API_KEY is missing! Please provide a valid wandb_token.")
     
     if args.executor == "slurm":
         # Custom mounts are defined here.
