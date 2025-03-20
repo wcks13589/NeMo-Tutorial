@@ -1,7 +1,5 @@
 import json
 
-import openai
-
 import asyncio
 import aiohttp
 
