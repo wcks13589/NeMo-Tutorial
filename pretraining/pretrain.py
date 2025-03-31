@@ -199,7 +199,7 @@ def run_pretraining(args):
 
     with run.Experiment(args.experiment, base_dir=WORK_PATH) as exp:
         exp.add(recipe, executor=executor, name="pretraining")
-        exp.dryrun() if args.executor == "slurm" else exp.run(sequential=True, tail_logs=True)
+        exp.dryrun(delete_exp_dir=False) if args.executor == "slurm" else exp.run(sequential=True, tail_logs=True)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="NeMo Pretraining Arguments")

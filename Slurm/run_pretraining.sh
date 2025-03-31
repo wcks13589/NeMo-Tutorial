@@ -2,7 +2,7 @@
 
 ml slurm
 
-NEMO_PATH=${PWD}/NeMo
+NEMO_PATH=${PWD}
 
 PARTITION=defq
 CONTAINER=nvcr.io/nvidia/nemo:dev
@@ -42,7 +42,7 @@ experiment_id=$(srun -p ${PARTITION} -G 8 \
 --container-writable \
 --no-container-mount-home \
 bash -c \
-"python pretrain.py \
+"python pretraining/pretrain.py \
     --executor slurm \
     --account ${USER} \
     --partition ${PARTITION} \
