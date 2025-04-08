@@ -4,7 +4,7 @@ ml slurm
 
 ## 參數設定
 PARTITION=defq
-NEMO_PATH=${PWD}/NeMo
+NEMO_PATH=${PWD}
 CONTAINER=nvcr.io/nvidia/nemo:dev
 
 MODEL=llama3_8b

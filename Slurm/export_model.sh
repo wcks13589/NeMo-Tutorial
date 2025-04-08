@@ -4,7 +4,7 @@ ml slurm
 
 ## 參數設定
 PARTITION=defq
-NEMO_PATH=${PWD}/NeMo
+NEMO_PATH=${PWD}
 CONTAINER=nvcr.io/nvidia/nemo:dev
 NEMO_MODEL=${NEMO_PATH}/experiments/llama31_pretraining/llama31_pretraining_1740317067/pretraining/code/nemo_experiments/llama31_finetuning/checkpoints/model_name\=0--val_loss\=1.38-step\=99-consumed_samples\=1600.0-last/
 OUTPUT_PATH=${NEMO_PATH}/hf_ckpt

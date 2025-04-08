@@ -3,7 +3,7 @@
 ml slurm
 
 PARTITION=defq
-NEMO_PATH=${PWD}/NeMo
+NEMO_PATH=${PWD}
 CONTAINER=nvcr.io/nvidia/nemo:dev
 
 srun -p ${PARTITION} -G 8 \
