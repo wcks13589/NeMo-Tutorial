@@ -53,9 +53,8 @@ bash data_preparation.sh
 準備完成後，即可提交 Slurm 任務進行預訓練：
 
 ```bash
-run_pretraining.sh
+bash run_pretraining.sh
 ```
-
 你可以在`run_pretraining.sh`中調整：
 - GPU / Node 數量
 - 訓練模型的規模
@@ -64,6 +63,7 @@ run_pretraining.sh
 - 資料集路徑 (DATASET_PATH)
 
 ## 3️⃣ 微調（Finetuning）🛠️
+
 ### 🔧 資料下載與準備
 微調前需下載並切分資料
 ```bash
