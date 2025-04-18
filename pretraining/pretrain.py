@@ -252,6 +252,9 @@ def parse_args():
     parser.add_argument("--wandb_name", type=str, default=None, help="WandB run name")
     parser.add_argument("--wandb_token", type=str, default=None, help="WandB personal token")
 
+    # Dryrun
+    parser.add_argument("--dryrun", action="store_true", help="Generate the training configuration without execution")
+
     return parser.parse_args()
 
 if __name__ == "__main__":
