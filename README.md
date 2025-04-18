@@ -41,7 +41,7 @@ NVIDIA NeMo 容器會隨 NeMo 版本更新同步發布，您可以在 [NeMo 版�
 ```bash
 docker run --gpus all -it --rm -v $HOME:$HOME --shm-size=8g \
             -w /workspace -p 8888:8888 --ulimit memlock=-1 --ulimit \
-            stack=67108864 nvcr.io/nvidia/nemo:24.12
+            stack=67108864 nvcr.io/nvidia/nemo:25.02
 ```
 
 此容器包含所有所需的核心依賴套件，包括 NeMo、PyTorch 和其他相關工具。請確保您的腳本和資料已掛載到容器內以進行後續操作。
@@ -117,6 +117,7 @@ from datasets import load_dataset
 
 dataset = load_dataset('erhwenkuo/wikinews-zhtw')['train']
 dataset.to_json('./data/custom_dataset/json/wikinews-zhtw.jsonl', force_ascii=False)
+exit()
 ```
 
 預處理資料以適配 NeMo 格式：

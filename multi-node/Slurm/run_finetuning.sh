@@ -42,7 +42,7 @@ experiment_id=$(srun -p ${PARTITION} -G 8 \
 --container-writable \
 --no-container-mount-home \
 bash -c \
-"python ../finetuning/finetune.py \
+"python ../../finetuning/finetune.py \
     --executor slurm \
     --account ${USER} \
     --partition ${PARTITION} \

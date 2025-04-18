@@ -152,7 +152,8 @@ def configure_executor(args):
         )
     else:
         executor = run.LocalExecutor(
-            launcher="torchrun", 
+            launcher="torchrun",
+            nodes=args.num_nodes,
             ntasks_per_node=args.num_gpus, 
             env_vars=env_vars
         )
@@ -181,7 +182,7 @@ def run_finetuning(args):
 
     with run.Experiment(args.experiment, base_dir=WORK_PATH) as exp:
         exp.add(recipe, executor=executor, name="finetuning")
-        exp.dryrun(delete_exp_dir=False) if args.executor == "slurm" or args.dryrun else exp.run(sequential=True, tail_logs=True)
+        exp.dryrun(delete_exp_dir=False) if args.executor == "slurm" else exp.run(sequential=True, tail_logs=True)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="NeMo Finetuning Arguments")
@@ -236,9 +237,6 @@ def parse_args():
     parser.add_argument("--wandb_name", type=str, default=None, help="WandB run name")
     parser.add_argument("--wandb_token", type=str, default=None, help="WandB personal token")
 
-    # Dryrun
-    parser.add_argument("--dryrun", action="store_true", help="Generate the training configuration without execution")
-    
     return parser.parse_args()
 
 if __name__ == "__main__":
