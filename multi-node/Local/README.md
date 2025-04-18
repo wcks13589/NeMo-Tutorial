@@ -180,7 +180,6 @@ python finetuning/download_split_data.py
 執行微調：
 
 ```bash
-```bash
 JOB_NAME=llama31_finetuning
 
 NUM_NODES=2
