@@ -6,20 +6,33 @@
 
 ---
 
-## 📦 1. 啟動 NeMo 容器（所有節點皆需執行）
+## 📥 1. 取得腳本（所有節點皆需執行）
+
+在操作流程之前，請先執行以下命令以下載本專案的程式庫。
+
+```bash
+git clone https://github.com/wcks13589/NeMo-Tutorial.git
+cd NeMo-Tutorial
+```
+
+---
+
+## 📦 2. 啟動 NeMo 容器（所有節點皆需執行）
 
 請在**每個計算節點**上執行以下 Docker 指令以啟動訓練容器：
 
 ```bash
 docker run \
     --gpus all -it --rm --shm-size=16g --ulimit memlock=-1 --ulimit stack=67108864 \
-    -v $HOME:$HOME --network host \
+    -v $PWD:$PWD -w $PWD --network host \
     nvcr.io/nvidia/nemo:25.02
 ```
 
+此容器包含所有所需的核心依賴套件，包括 NeMo、PyTorch 和其他相關工具。請確保您的腳本和資料已掛載到容器內以進行後續操作。
+
 ---
 
-## 🔧 2. 更新 NeMo 程式碼與套件（所有節點皆需執行）
+## 🔧 3. 更新 NeMo 程式碼與套件（所有節點皆需執行）
 在**每個計算節點**中的容器中執行以下指令以拉取最新版本的 NeMo-Run 程式碼與安裝必要套件：
 
 ```bash
@@ -30,7 +43,7 @@ pip install toml
 
 ---
 
-## 🔽 3. 模型下載與轉換（僅主節點執行）
+## 🔽 4. 模型下載與轉換（僅主節點執行）
 
 ### 登入 Hugging Face
 
@@ -74,7 +87,7 @@ nemo llm import -y model=${MODEL} source=hf://${HF_MODEL_ID} output_path=${OUTPU
 
 ---
 
-## 📚 4. 資料下載與預處理（僅主節點執行）
+## 📚 5. 資料下載與預處理（僅主節點執行）
 
 下載範例資料集並進行處理：
 
@@ -105,7 +118,7 @@ python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
 
 ---
 
-## 🌐 5. 多節點環境變數設置（依節點分別執行）
+## 🌐 6. 多節點環境變數設置（依節點分別執行）
 每台節點皆需設置以下環境變數。注意 `NODE_RANK` 需根據節點編號做調整。
 
 以2個節點為例：
@@ -129,7 +142,7 @@ export NODE_RANK=1
 
 ---
 
-## ⚙️ 6. 執行多節點預訓練（所有節點皆需執行）
+## ⚙️ 7. 執行多節點預訓練 Pre-training（所有節點皆需執行）
 設定環境變數後，於每個節點上執行以下指令：
 
 ```bash
@@ -169,7 +182,7 @@ python pretraining/pretrain.py \
 
 ---
 
-## 🔧 7. 多節點微調（所有節點皆需執行）
+## 🔧 8. 多節點微調 Fine-tuning（所有節點皆需執行）
 
 下載微調資料：
 
@@ -217,6 +230,6 @@ python finetuning/finetune.py \
 ---
 
 ## 📝 附註與建議
-- 所有節點應可互相通訊，請確保防火牆與網路設定允許使用 MASTER_PORT。
+- 所有節點應可互相通訊，請確保防火牆與網路設定允許使用`MASTER_PORT`。
 - `NEMO_MODEL`, `DATASET_PATH` 路徑需確保為所有節點可存取（建議使用 NFS 或共享磁碟）。
 - `HF_TOKEN` 需具備 Hugging Face 權限以存取模型。
