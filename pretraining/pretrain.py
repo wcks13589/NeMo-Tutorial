@@ -7,12 +7,12 @@ from typing import Tuple
 import pytorch_lightning as pl
 from lightning.pytorch.loggers import WandbLogger
 
+WORK_PATH = os.getcwd()
+os.environ['NEMORUN_HOME'] = WORK_PATH
+
 from nemo import lightning as nl
 from nemo.collections import llm
 from nemo.collections.common.tokenizers.huggingface import AutoTokenizer
-
-WORK_PATH = os.getcwd()
-os.environ['NEMORUN_HOME'] = WORK_PATH
 
 import nemo_run as run
 from nemo_run.core.tunnel.client import LocalTunnel
