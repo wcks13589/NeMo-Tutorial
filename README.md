@@ -42,7 +42,7 @@ NVIDIA NeMo 容器會隨 NeMo 版本更新同步發布，您可以在 [NeMo 版�
 docker run \
     --gpus all -it --rm --shm-size=8g --ulimit memlock=-1 --ulimit stack=67108864 \
     -v $PWD:$PWD -w $PWD -p 8888:8888 \
-    nvcr.io/nvidia/nemo:25.02
+    nvcr.io/nvidia/nemo:25.04.rc2
 ```
 
 此容器包含所有所需的核心依賴套件，包括 NeMo、PyTorch 和其他相關工具。請確保您的腳本和資料已掛載到容器內以進行後續操作。

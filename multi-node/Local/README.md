@@ -32,7 +32,19 @@ docker run \
 
 ---
 
-## 🔽 3. 模型下載與轉換（僅主節點執行）
+ 
+ ## 🔧 3. 更新 NeMo 程式碼與套件（所有節點皆需執行）
+ 在**每個計算節點**中的容器中執行以下指令以拉取最新版本的 NeMo-Run 程式碼與安裝必要套件：
+ 
+ ```bash
+ cd /opt/NeMo-Run/
+ git pull origin main
+ pip install toml
+ ```
+ 
+ ---
+
+## 🔽 4. 模型下載與轉換（僅主節點執行）
 
 ### 登入 Hugging Face
 
@@ -76,7 +88,7 @@ nemo llm import -y model=${MODEL} source=hf://${HF_MODEL_ID} output_path=${OUTPU
 
 ---
 
-## 📚 4. 資料下載與預處理（僅主節點執行）
+## 📚 5. 資料下載與預處理（僅主節點執行）
 
 下載範例資料集並進行處理：
 
@@ -107,7 +119,7 @@ python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
 
 ---
 
-## 🌐 5. 多節點環境變數設置（依節點分別執行）
+## 🌐 6. 多節點環境變數設置（依節點分別執行）
 每台節點皆需設置以下環境變數。注意 `NODE_RANK` 需根據節點編號做調整。
 
 以2個節點為例：
@@ -131,7 +143,7 @@ export NODE_RANK=1
 
 ---
 
-## ⚙️ 6. 執行多節點預訓練 Pre-training（所有節點皆需執行）
+## ⚙️ 7. 執行多節點預訓練 Pre-training（所有節點皆需執行）
 設定環境變數後，於每個節點上執行以下指令：
 
 ```bash
@@ -171,7 +183,7 @@ python pretraining/pretrain.py \
 
 ---
 
-## 🔧 7. 多節點微調 Fine-tuning（所有節點皆需執行）
+## 🔧 8. 多節點微調 Fine-tuning（所有節點皆需執行）
 
 下載微調資料：
 

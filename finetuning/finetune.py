@@ -69,7 +69,7 @@ def configure_recipe(args):
         name=args.experiment,
         num_nodes=args.num_nodes,
         num_gpus_per_node=args.num_gpus,
-        peft_scheme=None,
+        peft_scheme=args.peft,
         seq_length=args.seq_length,
         packed_sequence=True,
     )
@@ -209,6 +209,7 @@ def parse_args():
     parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("-s", "--seq_length", type=int, default=8192, help="Sequence length for the training")
     parser.add_argument("--fp8", action="store_true", help="Enable FP8 training mode")
+    parser.add_argument("--peft", type=lambda s: s.lower(), default=None, choices=["lora", "dora"], help="PEFT scheme")
 
     # 訓練參數
     parser.add_argument("--max_steps", type=int, default=None,
