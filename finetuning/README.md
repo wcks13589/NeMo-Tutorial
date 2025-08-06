@@ -101,10 +101,12 @@ JOB_NAME=llama31_finetuning
 NUM_NODES=1
 NUM_GPUS=8
 
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+MODEL=llama31_8b
 NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
 # LATEST_CHECKPOINT=$(find nemo_experiments/llama31_pretraining/checkpoints/ -type d -name "*-last" | sort -r | head -n 1)
-HF_TOKEN=$HF_TOKEN
+
+HF_TOKEN=<HF_TOKEN>
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 
 # 並行處理參數
 TP=2
@@ -112,8 +114,8 @@ PP=1
 CP=1
 
 # 微調參數
-GBS=8
-MAX_STEPS=20
+GBS=16
+MAX_STEPS=100
 DATASET_PATH=data/alpaca
 
 # 執行 LoRA 微調
@@ -122,12 +124,13 @@ python finetuning/finetune.py \
    --experiment ${JOB_NAME} \
    --num_nodes ${NUM_NODES} \
    --num_gpus ${NUM_GPUS} \
-   --model_size 8B \
+   --model ${MODEL} \
    --hf_model_id ${HF_MODEL_ID} \
    --hf_token ${HF_TOKEN} \
    --nemo_model ${NEMO_MODEL} \
    --max_steps ${MAX_STEPS} \
    --global_batch_size ${GBS} \
+   --lr 1e-6 \
    --tensor_model_parallel_size ${TP} \
    --pipeline_model_parallel_size ${PP} \
    --context_parallel_size ${CP} \
@@ -143,10 +146,12 @@ JOB_NAME=llama31_reasoning_finetuning
 NUM_NODES=1
 NUM_GPUS=8
 
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+MODEL=llama31_8b
 NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
 # LATEST_CHECKPOINT=$(find nemo_experiments/llama31_pretraining/checkpoints/ -type d -name "*-last" | sort -r | head -n 1)
+
 HF_TOKEN=$HF_TOKEN
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 
 # 並行處理參數
 TP=1
@@ -154,8 +159,8 @@ PP=1
 CP=1
 
 # 微調參數
-GBS=8
-MAX_STEPS=20
+GBS=16
+MAX_STEPS=100
 DATASET_PATH=data/reasoning_dataset/curated-data
 
 # 執行 Reasoning LoRA 微調
@@ -164,12 +169,13 @@ python finetuning/finetune.py \
    --experiment ${JOB_NAME} \
    --num_nodes ${NUM_NODES} \
    --num_gpus ${NUM_GPUS} \
-   --model_size 8B \
+   --model ${MODEL} \
    --hf_model_id ${HF_MODEL_ID} \
    --hf_token ${HF_TOKEN} \
    --nemo_model ${NEMO_MODEL} \
    --max_steps ${MAX_STEPS} \
    --global_batch_size ${GBS} \
+   --lr 5e-4 \
    --tensor_model_parallel_size ${TP} \
    --pipeline_model_parallel_size ${PP} \
    --context_parallel_size ${CP} \

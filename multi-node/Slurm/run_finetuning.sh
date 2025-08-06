@@ -2,29 +2,36 @@
 
 ml slurm
 
+PARTITION=defq
+CONTAINER=nvcr.io/nvidia/nemo:25.07
+NUM_GPUS=8
+
 NEMO_PATH=${PWD}
 
-PARTITION=defq
-CONTAINER=nvcr.io/nvidia/nemo:dev
-JOB_NAME=llama31_finetuning
+JOB_NAME=model_finetuning
 
-NUM_NODES=4
+NUM_NODES=1
 NUM_GPUS=8
 
 # Manually set the model size ("8B" or "70B")
-MODEL_SIZE="8B"  # Change to "70B" to switch the model
-if [[ "$MODEL_SIZE" == "8B" ]]; then
-    HF_MODEL_ID=Llama-3.1-8B-Instruct
+MODEL="llama31_8b"  # Change to "70B" to switch the model
+if [[ "$MODEL" == "llama31_8b" ]]; then
+    HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
     TP=2
     PP=1
     CP=1
-elif [[ "$MODEL_SIZE" == "70B" ]]; then
-    HF_MODEL_ID=Llama-3.3-70B-Instruct
+elif [[ "$MODEL" == "llama31_70b" ]]; then
+    HF_MODEL_ID=meta-llama/Llama-3.3-70B-Instruct
     TP=8
     PP=4
     CP=1
+elif [[ "$MODEL" == "qwen3_30b_a3b" ]]; then
+    HF_MODEL_ID=Qwen/Qwen3-30B-A3B-Instruct-2507
+    TP=4
+    PP=2
+    CP=1
 else
-    echo "Error: MODEL_SIZE must be '8B' or '70B'."
+    echo "Error: MODEL must be 'llama31_8b', 'llama31_70b', or 'qwen3_30b_a3b'."
     exit 1
 fi
 
@@ -50,7 +57,8 @@ bash -c \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
-    --hf_model_id meta-llama/${HF_MODEL_ID} \
+    --model ${MODEL} \
+    --hf_model_id ${HF_MODEL_ID} \
     --nemo_model ${NEMO_MODEL} \
     --hf_token ${HF_TOKEN} \
     --max_steps ${MAX_STEPS} \

@@ -46,7 +46,7 @@
 docker run \
     --gpus all -it --rm --shm-size=8g --ulimit memlock=-1 --ulimit stack=67108864 \
     -v $PWD:$PWD -w $PWD -p 8888:8888 \
-    nvcr.io/nvidia/nemo:25.04
+    nvcr.io/nvidia/nemo:25.07
 ```
 
 > 💡 **提示**：您可以在 [NGC NeMo Catalog](https://catalog.ngc.nvidia.com/orgs/nvidia/containers/nemo/tags) 查看最新版本
@@ -140,6 +140,7 @@ python data_preparation/download_pretrain_data.py \
 #### 2.2 資料預處理
 
 ```bash
+HF_MODEL=meta-llama/Llama-3.1-8B-Instruct
 # 建立預處理目錄
 mkdir -p data/custom_dataset/preprocessed
 
@@ -149,7 +150,7 @@ python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
     --json-keys=text \
     --dataset-impl mmap \
     --tokenizer-library=huggingface \
-    --tokenizer-type meta-llama/Llama-3.1-8B-Instruct \
+    --tokenizer-type ${HF_MODEL} \
     --output-prefix=data/custom_dataset/preprocessed/wikinews \
     --append-eod
 ```
@@ -161,9 +162,12 @@ python /opt/NeMo/scripts/nlp_language_modeling/preprocess_data_for_megatron.py \
 設定基本參數：
 
 ```bash
-JOB_NAME=llama31_pretraining
+JOB_NAME=model_pretraining
 NUM_NODES=1
 NUM_GPUS=8
+
+MODEL=llama31_8b
+
 HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 
 # 平行處理參數
@@ -190,10 +194,11 @@ python pretraining/pretrain.py \
    --experiment ${JOB_NAME} \
    --num_nodes ${NUM_NODES} \
    --num_gpus ${NUM_GPUS} \
-   --model_size 8B \
+   --model ${MODEL} \
    --hf_model_id ${HF_MODEL_ID} \
    --hf_token ${HF_TOKEN} \
    --max_steps ${MAX_STEPS} \
+   --lr 1e-5 \
    --global_batch_size ${GBS} \
    --tensor_model_parallel_size ${TP} \
    --pipeline_model_parallel_size ${PP} \
@@ -218,12 +223,13 @@ python pretraining/pretrain.py \
    --experiment ${JOB_NAME} \
    --num_nodes ${NUM_NODES} \
    --num_gpus ${NUM_GPUS} \
-   --model_size 8B \
+   --model ${MODEL} \
    --hf_model_id ${HF_MODEL_ID} \
    --nemo_model ${NEMO_MODEL} \
    --hf_token ${HF_TOKEN} \
    --max_steps ${MAX_STEPS} \
    --global_batch_size ${GBS} \
+   --lr 1e-5 \
    --tensor_model_parallel_size ${TP} \
    --pipeline_model_parallel_size ${PP} \
    --context_parallel_size ${CP} \
@@ -245,13 +251,15 @@ python data_preparation/download_sft_data.py
 
 ```bash
 # 微調參數設定
-JOB_NAME=llama31_finetuning
+JOB_NAME=model_finetuning
 NUM_NODES=1
 NUM_GPUS=8
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+
+MODEL=llama31_8b
 # NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
 NEMO_MODEL=$(find nemo_experiments/llama31_pretraining/checkpoints/ -type d -name "*-last" | sort -r | head -n 1)
-HF_TOKEN=$HF_TOKEN
+
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 
 # 平行處理參數
 TP=2
@@ -259,8 +267,8 @@ PP=1
 CP=1
 
 # 微調參數
-MAX_STEPS=10
-GBS=4
+MAX_STEPS=100
+GBS=16
 DATASET_PATH=data/alpaca
 
 # 執行 LoRA 微調
@@ -269,12 +277,13 @@ python finetuning/finetune.py \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
-    --model_size 8B \
+    --model ${MODEL} \
     --hf_model_id ${HF_MODEL_ID} \
     --hf_token ${HF_TOKEN} \
     --nemo_model ${NEMO_MODEL} \
     --max_steps ${MAX_STEPS} \
     --global_batch_size ${GBS} \
+    --lr 5e-6 \
     --tensor_model_parallel_size ${TP} \
     --pipeline_model_parallel_size ${PP} \
     --context_parallel_size ${CP} \
@@ -331,10 +340,12 @@ python data_preparation/curate_reasoning_data.py \
 JOB_NAME=llama31_reasoning_finetuning
 NUM_NODES=1
 NUM_GPUS=8
-HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
+
+MODEL=llama31_8b
 # NEMO_MODEL=nemo_ckpt/Llama-3.1-8B-Instruct
 NEMO_MODEL=$(find nemo_experiments/llama31_finetuning/checkpoints/ -type d -name "*-last" | sort -r | head -n 1)
-HF_TOKEN=$HF_TOKEN
+
+HF_MODEL_ID=meta-llama/Llama-3.1-8B-Instruct
 
 # 平行處理參數
 TP=2
@@ -342,8 +353,8 @@ PP=1
 CP=1
 
 # 微調參數
-MAX_STEPS=10
-GBS=4
+MAX_STEPS=100
+GBS=16
 DATASET_PATH=data/reasoning_dataset/curated-data
 
 # 執行 Reasoning 微調
@@ -352,7 +363,7 @@ python finetuning/finetune.py \
     --experiment ${JOB_NAME} \
     --num_nodes ${NUM_NODES} \
     --num_gpus ${NUM_GPUS} \
-    --model_size 8B \
+    --model ${MODEL} \
     --hf_model_id ${HF_MODEL_ID} \
     --hf_token ${HF_TOKEN} \
     --nemo_model ${NEMO_MODEL} \

@@ -73,15 +73,17 @@ data
    NUM_NODES=1
    NUM_GPUS=8
 
-   HF_MODEL_ID=Llama-3.1-8B-Instruct
+   MODEL=llama31_8b
    NEMO_MODEL=nemo_ckpt/${HF_MODEL_ID}
+   
    HF_TOKEN=<HF_TOKEN>
+   HF_MODEL_ID=Llama-3.1-8B-Instruct
 
    TP=2
    PP=1
    CP=1
 
-   GBS=2048
+   GBS=64
    MAX_STEPS=100
    DATASET_PATH=data/custom_dataset/preprocessed/
 
@@ -90,12 +92,13 @@ data
       --experiment ${JOB_NAME} \
       --num_nodes ${NUM_NODES} \
       --num_gpus ${NUM_GPUS} \
-      --model_size 8B \
+      --model ${MODEL} \
       --hf_model_id meta-llama/${HF_MODEL_ID} \
       --nemo_model ${NEMO_MODEL} \
       --hf_token ${HF_TOKEN} \
       --max_steps ${MAX_STEPS} \
       --global_batch_size ${GBS} \
+      --lr 1e-5 \
       --tensor_model_parallel_size ${TP} \
       --pipeline_model_parallel_size ${PP} \
       --context_parallel_size ${CP} \

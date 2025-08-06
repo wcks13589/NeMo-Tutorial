@@ -59,10 +59,14 @@ def configure_dataset(
     return dataset
 
 def configure_recipe(args):
-    if args.model_size.lower() == "8b":
+    if args.model == "llama31_8b":
         model = llm.llama31_8b
-    elif args.model_size.lower() == "70b":
+    elif args.model == "llama31_70b":
         model = llm.llama31_70b
+    elif args.model == "qwen3_30b_a3b":
+        model = llm.qwen3_30b_a3b
+    else:
+        raise ValueError(f"Invalid model name: {args.model}")
     
     recipe = model.finetune_recipe(
         dir="nemo_experiments",
@@ -89,12 +93,16 @@ def configure_recipe(args):
     # recipe.trainer.strategy.ckpt_load_strictness = False
 
     if args.fp8:
-        recipe.trainer.plugins.fp8 = "hybrid"
-        recipe.trainer.plugins.fp8_amax_history_len = 1024
-        recipe.trainer.plugins.fp8_amax_compute_algo = "max",
-        recipe.trainer.plugins.fp8_params = True
+        if args.fp8_recipe == "delayed_scaling":
+            recipe.trainer.plugins = bf16_with_fp8_mixed()
+        elif args.fp8_recipe == "current_scaling":
+            recipe.trainer.plugins = bf16_with_fp8_current_scaling_mixed()
+        elif args.fp8_recipe == "subchannel_scaling":
+            recipe.trainer.plugins = bf16_with_fp8_subchannel_scaling_mixed()
+        elif args.fp8_recipe == "mxfp8":
+            recipe.trainer.plugins = bf16_with_mxfp8_mixed()
 
-    recipe.optim.config.lr = 5e-6
+    recipe.optim.config.lr = args.lr
     
     recipe.log.ckpt.save_optim_on_train_end = True
     recipe.log.ckpt.monitor = "val_loss"
@@ -202,13 +210,14 @@ def parse_args():
     parser.add_argument("-G", "--num_gpus", type=int, default=8, help="Number of GPUs")
     
     # 模型設定
-    parser.add_argument("-M", "--model_size", type=str, choices=["8B", "8b", "70B", "70b"], default="8B", 
-                        help="Select Llama3 model size: '70B' or '8B'")
+    parser.add_argument("-M", "--model", type=str, choices=["llama31_8b", "llama31_70b", "qwen3_30b_a3b"], default="llama31_8b", 
+                        help="Select model name: 'llama31_8b', 'llama31_70b', 'qwen3_30b_a3b'")
     parser.add_argument("--hf_model_id", type=str, required=True, help="Huggingface Model ID")
     parser.add_argument("--hf_token", type=str, required=True, help="Huggingface Token for downloading tokenizer")
     parser.add_argument("-n", "--nemo_model", type=str, nargs="?", help="Pretrained NeMo Model path")
     parser.add_argument("-s", "--seq_length", type=int, default=8192, help="Sequence length for the training")
     parser.add_argument("--fp8", action="store_true", help="Enable FP8 training mode")
+    parser.add_argument("--fp8_recipe", type=str, choices=["delayed_scaling", "current_scaling", "subchannel_scaling", "mxfp8"], default="delayed_scaling", help="FP8 recipe")
     parser.add_argument("--peft", type=lambda s: s.lower(), default=None, choices=["lora", "dora"], help="PEFT scheme")
 
     # 訓練參數
@@ -217,6 +226,7 @@ def parse_args():
                         "Each step updates the model parameters once. If not set, the default training schedule will be used.")
     parser.add_argument("-g", "--global_batch_size", type=int, default=2048, help="Global batch size (must be multiple of micro_batch_size * data parallel size)")
     parser.add_argument("-m", "--micro_batch_size", type=int, default=1, help="Micro batch size per data parallel group")
+    parser.add_argument("--lr", type=float, default=5e-6, help="Learning rate")
 
     # 模型平行化參數
     parser.add_argument("-T", "--tensor_model_parallel_size", type=int, default=1,
